@@ -10,12 +10,15 @@ const Form_etat_de_stock=()=>{
         references: "S",
         magasin:{
             id:""
-        }
+        },
+        idUniteEquivalence:""
 
     })
 
     const [magasin,setMagasin]=useState([])
     const [produits,setProduits]=useState([])
+    const [equivalence,setEquivalence]=useState([])
+
     const [etatDestock,setEtatDestock]=useState([])
     const [showEtat,setShowEtat]=useState(false)
     const [dateDebut , setDateDebut]=useState("")
@@ -29,8 +32,12 @@ const Form_etat_de_stock=()=>{
             async function fetchDatas (){
                 const mag= await axios.get("http://localhost:8080/api/magasin")
                 const prod= await axios.get("http://localhost:8080/api/produit")
+                const eq=await axios.get("http://localhost:8080/api/unite")
+
                 setMagasin(mag.data)
                 setProduits(prod.data)
+                setEquivalence(eq.data)
+
             }
             fetchDatas()
         },[]
@@ -39,7 +46,7 @@ const Form_etat_de_stock=()=>{
         setFormdata({...formdata, dateFin: formatDateTime(new Date(formdata.dateFin)),dateDebut: formatDateTime(new Date(formdata.dateDebut))})
         console.log("huhu "+formdata)
         try{
-            const etat= await axios.post("http://localhost:8080/api/EtatdeStock",formdata)
+            const etat= await axios.post("http://localhost:8080/api/etatDeStock",formdata)
             setEtatDestock(etat.data)
             setShowEtat(true)
             console.log("==>> "+JSON.stringify(etatDestock))
@@ -81,7 +88,7 @@ const Form_etat_de_stock=()=>{
             <Form>
                 <div className="row">
                     <Form.Group className="mb-3 col-6" controlId="formdate">
-                        <Form.Label>date de sortie de stock</Form.Label>
+                        <Form.Label>date de debut de stock</Form.Label>
                         <Form.Control type="datetime-local"  value={formdata.dateDebut}
                                       onChange={(e)=>{
                                           setFormdata({...formdata, dateDebut: (e.target.value)})
@@ -89,7 +96,7 @@ const Form_etat_de_stock=()=>{
                         />
                     </Form.Group>
                     <Form.Group className="mb-3 col-6" controlId="formdate2">
-                        <Form.Label>date de sortie de stock</Form.Label>
+                        <Form.Label>date de fin de stock</Form.Label>
                         <Form.Control type="datetime-local"  value={formdata.dateFin}
                                       onChange={(e)=>{
                                           setFormdata({...formdata, dateFin: (e.target.value)})
@@ -121,6 +128,24 @@ const Form_etat_de_stock=()=>{
                         }
                     </Form.Select>
                 </Form.Group>
+
+                {/*<Form.Group>*/}
+                {/*    <Form.Label>unite d'equivalence </Form.Label>*/}
+                {/*    <Form.Select aria-label="Default select example" value={*/}
+                {/*        formdata.idUniteEquivalence} onChange={(e)=>{setFormdata({...formdata, idUniteEquivalence: e.target.value })*/}
+                {/*        console.log("unite "+JSON.stringify(formdata.idUniteEquivalence))*/}
+                {/*    }*/}
+
+                {/*    }>*/}
+                {/*        <option>unite</option>*/}
+                {/*        {*/}
+                {/*            equivalence?.map((prod,index)=>(*/}
+                {/*                <option key={index} value={prod.id}>{prod.denom } : {prod.produit.ref_produit}</option>*/}
+                {/*            ))*/}
+                {/*        }*/}
+
+                {/*    </Form.Select>*/}
+                {/*</Form.Group>*/}
 
                 <Button className="mt-5 col-12" onClick={validerFormulaire}>valider</Button>
             </Form>

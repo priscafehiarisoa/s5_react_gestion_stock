@@ -6,27 +6,34 @@ import axios from "axios";
 const Form_sortie_de_stock= ()=>{
     const [formdata, setFormdata]=useState({
 
-        date_sortie: "2023-11-14",
+        dateMouvementSortie: "",
         quantite_sortie: 1000,
-        ref_produit: {
+        produit: {
             ref_produit: "SR001"
 
         },
         magasin: {
             id: 1
+        },
+        uniteEquivalence:{
+            id:""
         }
     })
     const [magasin,setMagasin]=useState([])
     const [produits,setProduits]=useState([])
     const [messageErreur, setMessageErreur]=useState("")
+    const [equivalence,setEquivalence]=useState([])
+    const [lastDate,setLastDate]=useState([])
 
     useEffect(()=>
         {
             async function fetchDatas (){
                 const mag= await axios.get("http://localhost:8080/api/magasin")
                 const prod= await axios.get("http://localhost:8080/api/produit")
+                const eq=await axios.get("http://localhost:8080/api/unite")
                 setMagasin(mag.data)
                 setProduits(prod.data)
+                setEquivalence(eq.data)
             }
             fetchDatas()
         },[]
@@ -34,29 +41,45 @@ const Form_sortie_de_stock= ()=>{
 
     const reserFormdata=()=>{
         setFormdata({
-            date_sortie: "",
+            dateMouvementSortie: "",
             quantite_sortie: 0,
-            ref_produit: {
+            produit: {
                 ref_produit: ""
 
             },
             magasin: {
                 id: ""
+            },
+            uniteEquivalence:{
+                id:""
             }
         })
     }
 
+    // {
+    //     "dateMouvementSortie": "2023-11-23 00:00:00",
+    //     "quantite_sortie": 20,
+    //     "produit": {
+    //     "ref_produit": "SR002"
+    //
+    // },
+    //     "magasin": {
+    //     "id": 1
+    // }
+    // }
+
+
     const validationFormdata=()=>{
-        if(formdata.date_sortie.isEmpty){
+        if(formdata.dateMouvementSortie.isEmpty){
             setMessageErreur("date non valide")
         }
         if(formdata.quantite_sortie===0 || formdata.quantite_sortie<0){
             setMessageErreur("quantite "+formdata.quantite_sortie+" non valide")
         }
-        if(formdata.ref_produit.ref_produit===""){
-            setMessageErreur("veuillez selectionner un produit")
-
-        }
+        // if(formdata.produit.ref_produit===""){
+        //     setMessageErreur("veuillez selectionner un produit")
+        //
+        // }
         if(formdata.magasin.id.isEmpty){
             setMessageErreur("[veuillez selectionner un magasin]")
         }
@@ -65,12 +88,28 @@ const Form_sortie_de_stock= ()=>{
         }
         return true
     }
-
+    const formatDate=(datetime)=>{
+        datetime.replace("T"," ")
+    }
+    const formatDateTimes = (dateTime) => {
+        const year = dateTime.getFullYear();
+        const month = String(dateTime.getMonth() + 1).padStart(2, '0');
+        const day = String(dateTime.getDate()).padStart(2, '0');
+        const hours = String(dateTime.getHours()).padStart(2, '0');
+        const minutes = String(dateTime.getMinutes()).padStart(2, '0');
+        const seconds = String(dateTime.getSeconds()).padStart(2, '0');
+        const milliseconds = String(dateTime.getMilliseconds()).padStart(3, '0');
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`;
+    };
     const  validerFormulaire =async ()=>{
+        setFormdata({...formdata, dateMouvementSortie: formdata.dateMouvementSortie+"00:00:00" })
+        console.log("huhu "+JSON.stringify(formdata))
+
         setMessageErreur("")
+
         if(validationFormdata()){
             try{
-                const etat= await axios.post("http://localhost:8080/api/sortie",formdata)
+                const etat= await axios.post("http://localhost:8080/api/savemouvement",formdata)
                 if(etat.data.message){
                     console.log(etat.data.message())
                 }
@@ -99,9 +138,9 @@ return (
         <Form>
             <Form.Group className="mb-3" controlId="formdate">
                 <Form.Label>date de sortie de stock</Form.Label>
-                <Form.Control type="date"  value={formdata.date_sortie}
+                <Form.Control type="date"  value={formdata.dateMouvementSortie}
                               onChange={(e)=>{
-                                  setFormdata({...formdata, date_sortie: e.target.value})
+                                  setFormdata({...formdata, dateMouvementSortie: e.target.value})
                               }}
                 />
             </Form.Group>
@@ -119,11 +158,26 @@ return (
 
             <Form.Group>
                 <Form.Label>produits en stock </Form.Label>
-                <Form.Select aria-label="Default select example" value={formdata.ref_produit.ref_produit} onChange={(e)=>setFormdata({...formdata, ref_produit:{ref_produit: e.target.value} })}>
+                <Form.Select aria-label="Default select example" value={formdata.produit.ref_produit} onChange={(e)=>setFormdata({...formdata, produit:{ref_produit: e.target.value} })}>
                     <option>produits</option>
                     {
                         produits?.map((prod,index)=>(
                             <option key={index} value={prod.ref_produit}>{prod.ref_produit}</option>
+                        ))
+                    }
+
+                </Form.Select>
+            </Form.Group>
+
+            <Form.Group>
+                <Form.Label>unite d'equivalence </Form.Label>
+                <Form.Select aria-label="Default select example" value={formdata.uniteEquivalence.id} onChange={(e)=>setFormdata({...formdata, uniteEquivalence:{id: e.target.value} })}>
+                    <option>unite</option>
+                    {
+                        equivalence?.map((prod,index)=>(
+                            <option key={index} value={prod.id}>{prod.denom } :
+                                {/*{prod.produit.ref_produit===null?null:prod.produit.ref_produit}*/}
+                            </option>
                         ))
                     }
 
